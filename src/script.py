@@ -1,23 +1,79 @@
+# import requests
+# import os
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# POLYGON_API_KEY = os.getenv('POLYGON_API_KEY')
+# LIMIT = 1000
+
+# url = f'https://api.polygon.io/v3/reference/tickers?market=stocks&active=true&order=asc&limit={LIMIT}&sort=ticker&apiKey={POLYGON_API_KEY}'
+
+
+# # response = requests.get(url)
+
+
+# # print(response.json())
+# # next_url = response.json()['next_url']
+# # data = response.json()['results']    
+
+# tickers = []
+# # params = {"limit": 100, "next_url": None}
+
+
+
+# while True:
+#     print("Batch being extracted ....")
+#     response = requests.get(url).json()
+#     try:
+#         data = response["results"]
+#         tickers.extend(data)
+
+#         # for ticker in data:
+#         #     tickers.append(ticker)
+    
+#         if "next_url" not in response or not response["next_url"]:
+#             break
+        
+#         url = response["next_url"] + f"&apiKey={POLYGON_API_KEY}"
+#         print("Batch extraction finished.")
+
+#     except KeyError:
+#         print("Data extraction completed.")
+#         break
+
+
+
+# print(len(tickers))
+
+
 import requests
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
 
-POLYGON_API_KEY = os.getenv('POLYGON_API_KEY')
+POLYGON_API_KEY = os.getenv("POLYGON_API_KEY")
 
-url = f'https://api.polygon.io/v3/reference/dividends?apiKey={POLYGON_API_KEY}'
+tickers = []
+url = f"https://api.polygon.io/v3/reference/tickers?market=stocks&active=true&order=asc&limit=1000&sort=ticker&apiKey={POLYGON_API_KEY}"
 
+while url:
+    print("Batch being extracted ....")
+    response = requests.get(url).json()
 
-response = requests.get(url)
-print(response.json())
+    if "results" in response:
+        tickers.extend(response["results"])
 
-next_url = response.json()['next_url']
+    # Move to next page if available
+    url = response.get("next_url")
+    if url:
+        url += f"&apiKey={POLYGON_API_KEY}"
+        time.sleep(12)  # ⏳ prevent hitting Polygon free-tier rate limits
+        print("Batch extraction finished.")
+    else:
+        break
 
-print(next_url)
-data = response.json()['results']    
-
-for ticker in data:
-    print(ticker['currency'], ticker["ticker"])
-
+print(f"Total tickers extracted: {len(tickers)}")
 
