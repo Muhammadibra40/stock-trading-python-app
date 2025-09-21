@@ -51,6 +51,7 @@ import requests
 import os
 import time
 from dotenv import load_dotenv
+import pandas as pd
 
 load_dotenv()
 
@@ -63,17 +64,33 @@ while url:
     print("Batch being extracted ....")
     response = requests.get(url).json()
 
+    data = response["results"]
     if "results" in response:
-        tickers.extend(response["results"])
+        tickers.extend(data)
 
-    # Move to next page if available
+
     url = response.get("next_url")
     if url:
         url += f"&apiKey={POLYGON_API_KEY}"
-        time.sleep(12)  # ⏳ prevent hitting Polygon free-tier rate limits
+        time.sleep(12)  #prevent hitting Polygon free-tier rate limits
         print("Batch extraction finished.")
     else:
         break
 
 print(f"Total tickers extracted: {len(tickers)}")
+df = pd.DataFrame(tickers)
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+parent_dir = os.path.dirname(script_dir)      
+output_dir = os.path.join(parent_dir, "Data")  
+
+os.makedirs(output_dir, exist_ok=True)
+
+output_path = os.path.join(output_dir, "polygon_tickers.csv")
+
+
+df.to_csv(output_path, index=False)
+
+print("Data written to polygon_tickers.csv")
 
